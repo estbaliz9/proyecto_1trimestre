@@ -1,0 +1,45 @@
+---
+- name: Instalar PHP 8.4 y extensiones
+  apt:
+    name:
+      - php8.4
+      - php8.4-cli
+      - php8.4-common
+      - php8.4-mysql
+      - php8.4-mbstring
+      - php8.4-xml
+      - php8.4-curl
+      - php8.4-gd
+      - php8.4-zip
+      - php8.4-opcache
+      - php8.4-fpm
+    state: present
+    update_cache: yes
+
+- name: Iniciar y habilitar PHP 8.4-FPM
+  systemd:
+    name: php8.4-fpm
+    state: started
+    enabled: yes
+    daemon_reload: yes
+
+- name: Crear enlace simbólico para socket PHP-FPM
+  file:
+    src: /run/php/php8.4-fpm.sock
+    dest: /run/php/php-fpm.sock
+    state: link
+    force: yes
+
+- name: Configurar PHP.ini (FPM)
+  lineinfile:
+    path: /etc/php/8.4/fpm/php.ini
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    backup: yes
+  loop:
+    - { regexp: '^;?upload_max_filesize', line: 'upload_max_filesize = 64M' }
+    - { regexp: '^;?post_max_size', line: 'post_max_size = 64M' }
+    - { regexp: '^;?memory_limit', line: 'memory_limit = 256M' }
+    - { regexp: '^;?max_execution_time', line: 'max_execution_time = 300' }
+    - { regexp: '^;?date.timezone', line: 'date.timezone = Europe/Madrid' }
+  notify: restart php-fpm
