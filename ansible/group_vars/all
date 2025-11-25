@@ -1,28 +1,19 @@
-# Lista con diccionarios para indicar los datos de los virtualhost que se van a crear:
-# apache2
+# Configuración para nginx
 virtualhosts:
   - name: example
     datos:
-      nameserver: www.example.org 
-      documentroot: /var/www/example
-      errorlog: error_example
-      accesslog: acceses_example
-
-
-# Lista con los módulos que hay que activar
-mods_enabled:
-  - rewrite
-
+      server_name: www.example.org
+      root: /var/www/example
+      error_log: /var/log/nginx/error_example.log
+      access_log: /var/log/nginx/access_example.log
 
 # URL del repositorio
 guestbook_repo_url: "https://github.com/josedom24/guestbook_php.git"
 
-# Opcional: ruta base donde se alojarán los DocumentRoot
+# Ruta base para los sitios web
 base_web_path: "/var/www/example"
 
-
-# Variables de conexión a MariaDB para la aplicación guestbook
-
+# Variables de conexión a MariaDB
 guestbook_db_host: "mariadb.example.org"
 guestbook_db_user: "guestbook_user"
 guestbook_db_password: "guestbook_pass"

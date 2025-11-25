@@ -1,4 +1,4 @@
----
+--
 - name: Instalar Nginx
   apt:
     name: 
@@ -8,32 +8,9 @@
     state: present
     update_cache: yes
 
-- name: Detener y deshabilitar Apache2 si existe
-  service:
-    name: apache2
-    state: stopped
-    enabled: no
-  ignore_errors: yes
-
-- name: Desinstalar Apache2
-  apt:
-    name:
-      - apache2
-      - apache2-utils
-      - apache2-bin
-    state: absent
-    purge: yes
-  ignore_errors: yes
-
-- name: Detener Nginx temporalmente
-  service:
-    name: nginx
-    state: stopped
-  ignore_errors: yes
-
 - name: Crear DocumentRoot si no existe
   ansible.builtin.file:
-    path: "{{ item['datos']['documentroot'] }}"
+    path: "{{ item['datos']['root'] }}"  # ← CAMBIADO
     state: directory
     owner: www-data
     group: www-data
@@ -69,7 +46,7 @@
 - name: Copiar aplicación Guestbook
   ansible.builtin.copy:
     src: app/
-    dest: "{{ item['datos']['documentroot'] }}/"
+    dest: "{{ item['datos']['root'] }}/"  # ← CAMBIADO
     owner: www-data
     group: www-data
     mode: '0644'
@@ -79,7 +56,7 @@
 - name: Crear fichero de configuración config.php
   ansible.builtin.template:
     src: config.php.j2
-    dest: "{{ item['datos']['documentroot'] }}/config.php"
+    dest: "{{ item['datos']['root'] }}/config.php"  # ← CAMBIADO
     owner: www-data
     group: www-data
     mode: '0644'
