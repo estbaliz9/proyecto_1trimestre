@@ -5,6 +5,12 @@ virtualhosts:
       documentroot: /var/www/example
       errorlog: error_example
       accesslog: access_example
+  - name: wordpress
+    datos:
+      nameserver: wordpress.example.org
+      documentroot: /var/www/wordpress
+      errorlog: error_wordpress
+      accesslog: access_wordpress
 
 # URL del repositorio
 guestbook_repo_url: "https://github.com/josedom24/guestbook_php.git"
@@ -17,3 +23,8 @@ guestbook_db_host: "mariadb.example.org"
 guestbook_db_user: "guestbook_user"
 guestbook_db_password: "guestbook_pass"
 guestbook_db_name: "guestbook_db"
+
+wordpress_db_name: "wordpress_db"
+wordpress_db_user: "wordpress_user"
+wordpress_db_password: "wordpress_pass"
+wordpress_db_host: "mariadb.example.org"

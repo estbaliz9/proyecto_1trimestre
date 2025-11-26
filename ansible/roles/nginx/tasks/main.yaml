@@ -5,6 +5,9 @@
       - nginx
       - git
       - python3-pymysql
+      - wget
+      - unzip
+      - rsync
     state: present
     update_cache: yes
 
@@ -45,6 +48,7 @@
     state: started
     enabled: yes
 
+# Guestbook
 - name: Copiar aplicación Guestbook
   ansible.builtin.copy:
     src: app/
@@ -54,6 +58,7 @@
     mode: '0644'
     directory_mode: '0755'
   loop: "{{ virtualhosts }}"
+  when: item.name == "example"
 
 - name: Crear fichero de configuración config.php
   ansible.builtin.template:
@@ -63,3 +68,54 @@
     group: www-data
     mode: '0644'
   loop: "{{ virtualhosts }}"
+  when: item.name == "example"
+
+# WordPress
+- name: Descargar WordPress
+  get_url:
+    url: https://wordpress.org/latest.tar.gz
+    dest: /tmp/wordpress.tar.gz
+    mode: '0644'
+
+- name: Extraer WordPress
+  unarchive:
+    src: /tmp/wordpress.tar.gz
+    dest: /tmp/
+    remote_src: yes
+    creates: /tmp/wordpress
+
+- name: Copiar archivos de WordPress al DocumentRoot
+  synchronize:
+    src: /tmp/wordpress/
+    dest: "{{ item['datos']['documentroot'] }}/"
+  delegate_to: "{{ inventory_hostname }}"
+  loop: "{{ virtualhosts }}"
+  when: item.name == "wordpress"
+
+- name: Establecer permisos correctos en WordPress
+  file:
+    path: "{{ item['datos']['documentroot'] }}"
+    owner: www-data
+    group: www-data
+    recurse: yes
+    state: directory
+  loop: "{{ virtualhosts }}"
+  when: item.name == "wordpress"
+
+- name: Crear wp-config.php
+  template:
+    src: wp-config.php.j2
+    dest: "{{ item['datos']['documentroot'] }}/wp-config.php"
+    owner: www-data
+    group: www-data
+    mode: '0640'
+  loop: "{{ virtualhosts }}"
+  when: item.name == "wordpress"
+
+- name: Limpiar archivos temporales de WordPress
+  file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /tmp/wordpress.tar.gz
+    - /tmp/wordpress
