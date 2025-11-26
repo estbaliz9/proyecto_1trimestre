@@ -1,11 +1,10 @@
-# Configuración para nginx
 virtualhosts:
   - name: example
     datos:
-      server_name: www.example.org
-      root: /var/www/example
-      error_log: /var/log/nginx/error_example.log
-      access_log: /var/log/nginx/access_example.log
+      nameserver: www.example.org
+      documentroot: /var/www/example
+      errorlog: error_example
+      accesslog: access_example
 
 # URL del repositorio
 guestbook_repo_url: "https://github.com/josedom24/guestbook_php.git"

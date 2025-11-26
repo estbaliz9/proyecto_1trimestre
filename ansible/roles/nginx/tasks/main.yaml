@@ -10,7 +10,7 @@
 
 - name: Crear DocumentRoot si no existe
   ansible.builtin.file:
-    path: "{{ item['datos']['root'] }}"  # ← CAMBIADO
+    path: "{{ item['datos']['documentroot'] }}"
     state: directory
     owner: www-data
     group: www-data
@@ -25,6 +25,7 @@
     group: root
     mode: '0644'
   loop: "{{ virtualhosts }}"
+  notify: restart nginx
 
 - name: Activación de los VirtualHost
   file:
@@ -32,6 +33,7 @@
     dest: /etc/nginx/sites-enabled/{{ item["name"] }}.conf
     state: link
   loop: "{{ virtualhosts }}"
+  notify: restart nginx
 
 - name: Verificar configuración de Nginx
   command: nginx -t
@@ -46,7 +48,7 @@
 - name: Copiar aplicación Guestbook
   ansible.builtin.copy:
     src: app/
-    dest: "{{ item['datos']['root'] }}/"  # ← CAMBIADO
+    dest: "{{ item['datos']['documentroot'] }}/"
     owner: www-data
     group: www-data
     mode: '0644'
@@ -56,7 +58,7 @@
 - name: Crear fichero de configuración config.php
   ansible.builtin.template:
     src: config.php.j2
-    dest: "{{ item['datos']['root'] }}/config.php"  # ← CAMBIADO
+    dest: "{{ item['datos']['documentroot'] }}/config.php"
     owner: www-data
     group: www-data
     mode: '0644'
