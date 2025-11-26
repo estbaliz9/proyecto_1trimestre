@@ -11,6 +11,13 @@ virtualhosts:
       documentroot: /var/www/wordpress
       errorlog: error_wordpress
       accesslog: access_wordpress
+  - name: fortune
+    datos:
+      nameserver: fortune.example.org
+      documentroot: /var/www/fortune
+      errorlog: error_fortune
+      accesslog: access_fortune
+      proxy_pass: http://localhost:8080
 
 # URL del repositorio
 guestbook_repo_url: "https://github.com/josedom24/guestbook_php.git"
@@ -24,7 +31,65 @@ guestbook_db_user: "guestbook_user"
 guestbook_db_password: "guestbook_pass"
 guestbook_db_name: "guestbook_db"
 
+# WordPress
 wordpress_db_name: "wordpress_db"
 wordpress_db_user: "wordpress_user"
 wordpress_db_password: "wordpress_pass"
 wordpress_db_host: "mariadb.example.org"
+
+virtualhosts:
+  - name: example
+    datos:
+      nameserver: www.example.org
+      documentroot: /var/www/example
+      errorlog: error_example
+      accesslog: access_example
+  - name: wordpress
+    datos:
+      nameserver: wordpress.example.org
+      documentroot: /var/www/wordpress
+      errorlog: error_wordpress
+      accesslog: access_wordpress
+  - name: fortune
+    datos:
+      nameserver: fortune.example.org
+      documentroot: /var/www/fortune
+      errorlog: error_fortune
+      accesslog: access_fortune
+      proxy_pass: http://localhost:8080
+
+# URL del repositorio
+guestbook_repo_url: "https://github.com/josedom24/guestbook_php.git"
+
+# Ruta base para los sitios web
+base_web_path: "/var/www/example"
+
+# Variables de conexión a MariaDB
+guestbook_db_host: "mariadb.example.org"
+guestbook_db_user: "guestbook_user"
+guestbook_db_password: "guestbook_pass"
+guestbook_db_name: "guestbook_db"
+
+# WordPress
+wordpress_db_name: "wordpress_db"
+wordpress_db_user: "wordpress_user"
+wordpress_db_password: "wordpress_pass"
+wordpress_db_host: "mariadb.example.org"
+
+# Docker - Redes
+docker_networks:
+  - name: fortune_network
+    driver: bridge
+
+# Docker - Contenedores
+docker_containers:
+  - name: fortune_cookie
+    image: simulalex/fortune-cookie-api:1
+    state: started
+    restart_policy: unless-stopped
+    ports:
+      - "127.0.0.1:8080:8080"
+    networks:
+      - name: fortune_network
+    labels:
+      description: "Fortune Cookie API - Daily wisdom"

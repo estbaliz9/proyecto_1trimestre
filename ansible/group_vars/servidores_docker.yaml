@@ -1,0 +1,32 @@
+---
+# Redes Docker
+docker_networks:
+  - name: fortune_network
+    driver: bridge
+
+# Contenedores Docker
+docker_containers:
+  # Fortune Cookie - Galletas de la fortuna
+  - name: fortune_cookie
+    image: bretfisher/fortune:latest
+    state: started
+    restart_policy: unless-stopped
+    ports:
+      - "127.0.0.1:8080:3000"
+    networks:
+      - name: fortune_network
+    labels:
+      description: "Fortune Cookie - Daily wisdom and predictions"
+
+  # Portainer - Gestión Docker
+  - name: portainer
+    image: portainer/portainer-ce:latest
+    state: started
+    restart_policy: unless-stopped
+    ports:
+      - "9000:9000"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      - "portainer_data:/data"
+    labels:
+      description: "Portainer - Docker Management"

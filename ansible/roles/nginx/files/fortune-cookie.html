@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🥠 Galleta de la Fortuna</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Georgia', serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+            width: 100%;
+            padding: 50px 40px;
+            text-align: center;
+        }
+
+        h1 {
+            color: #764ba2;
+            font-size: 3em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 1.2em;
+            margin-bottom: 40px;
+            font-style: italic;
+        }
+
+        .fortune-box {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            border-radius: 15px;
+            padding: 40px 30px;
+            margin: 30px 0;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease;
+        }
+
+        .fortune-box:hover {
+            transform: translateY(-5px);
+        }
+
+        .fortune-text {
+            font-size: 1.5em;
+            color: #333;
+            line-height: 1.6;
+            font-weight: 500;
+            margin-bottom: 20px;
+        }
+
+        .lucky-numbers {
+            font-size: 1.2em;
+            color: #555;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px dashed #fcb69f;
+        }
+
+        .lucky-numbers strong {
+            color: #764ba2;
+        }
+
+        .lucky-numbers .numbers {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .lucky-numbers .number {
+            background: white;
+            padding: 10px 15px;
+            border-radius: 50%;
+            font-weight: bold;
+            color: #764ba2;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 18px 50px;
+            font-size: 1.3em;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(118, 75, 162, 0.4);
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(118, 75, 162, 0.6);
+        }
+
+        button:active {
+            transform: translateY(-1px);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            color: #764ba2;
+            font-size: 1.2em;
+            margin: 20px 0;
+        }
+
+        .error {
+            color: #e74c3c;
+            background: #fee;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        .cookie-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0px);
+            }
+            50% {
+                transform: translateY(-20px);
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.6s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="cookie-icon">🥠</div>
+        <h1>Galleta de la Fortuna</h1>
+        <p class="subtitle">Descubre tu destino con un clic</p>
+
+        <div id="fortuneContainer"></div>
+
+        <button id="getFortune" onclick="getFortune()">
+            Abrir Galleta
+        </button>
+
+        <div id="loading" class="loading" style="display: none;">
+            ✨ Consultando las estrellas...
+        </div>
+
+        <div id="error" class="error" style="display: none;"></div>
+    </div>
+
+    <script>
+        async function getFortune() {
+            const button = document.getElementById('getFortune');
+            const loading = document.getElementById('loading');
+            const error = document.getElementById('error');
+            const container = document.getElementById('fortuneContainer');
+
+            // Reset states
+            button.disabled = true;
+            loading.style.display = 'block';
+            error.style.display = 'none';
+            container.innerHTML = '';
+
+            try {
+                const response = await fetch('/api/fortune');
+                
+                if (!response.ok) {
+                    throw new Error('No se pudo obtener la fortuna');
+                }
+
+                const data = await response.json();
+
+                // Create fortune display
+                const fortuneBox = document.createElement('div');
+                fortuneBox.className = 'fortune-box fade-in';
+
+                const fortuneText = document.createElement('div');
+                fortuneText.className = 'fortune-text';
+                fortuneText.textContent = `"${data.text}"`;
+
+                const luckyNumbers = document.createElement('div');
+                luckyNumbers.className = 'lucky-numbers';
+                luckyNumbers.innerHTML = '<strong>🍀 Números de la Suerte:</strong>';
+
+                const numbersDiv = document.createElement('div');
+                numbersDiv.className = 'numbers';
+                
+                data.luckyNumbers.forEach(num => {
+                    const numSpan = document.createElement('span');
+                    numSpan.className = 'number';
+                    numSpan.textContent = num;
+                    numbersDiv.appendChild(numSpan);
+                });
+
+                luckyNumbers.appendChild(numbersDiv);
+                fortuneBox.appendChild(fortuneText);
+                fortuneBox.appendChild(luckyNumbers);
+                container.appendChild(fortuneBox);
+
+            } catch (err) {
+                error.textContent = '❌ Error: ' + err.message;
+                error.style.display = 'block';
+            } finally {
+                loading.style.display = 'none';
+                button.disabled = false;
+            }
+        }
+
+        // Get fortune on page load
+        window.addEventListener('load', getFortune);
+    </script>
+</body>
+</html>

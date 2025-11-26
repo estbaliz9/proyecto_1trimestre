@@ -1,0 +1,110 @@
+---
+- name: Instalar dependencias para Docker
+  apt:
+    name:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - gnupg
+      - lsb-release
+      - python3-pip
+    state: present
+    update_cache: yes
+
+- name: Crear directorio para keyrings
+  file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: '0755'
+
+- name: Descargar clave GPG de Docker
+  get_url:
+    url: https://download.docker.com/linux/debian/gpg
+    dest: /tmp/docker.gpg
+    mode: '0644'
+
+- name: Añadir clave GPG oficial de Docker
+  command: gpg --dearmor -o /etc/apt/keyrings/docker.gpg /tmp/docker.gpg
+  args:
+    creates: /etc/apt/keyrings/docker.gpg
+
+- name: Establecer permisos correctos en la clave
+  file:
+    path: /etc/apt/keyrings/docker.gpg
+    mode: '0644'
+
+- name: Obtener la versión de Debian
+  command: lsb_release -cs
+  register: debian_version
+  changed_when: false
+
+- name: Obtener la arquitectura del sistema
+  command: dpkg --print-architecture
+  register: system_arch
+  changed_when: false
+
+- name: Añadir repositorio de Docker
+  apt_repository:
+    repo: "deb [arch={{ system_arch.stdout }} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian {{ debian_version.stdout }} stable"
+    state: present
+    filename: docker
+
+- name: Limpiar archivo temporal de GPG
+  file:
+    path: /tmp/docker.gpg
+    state: absent
+
+- name: Instalar Docker Engine
+  apt:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
+    state: present
+    update_cache: yes
+
+- name: Instalar Docker SDK para Python desde repositorios
+  apt:
+    name:
+      - python3-docker
+      - python3-requests
+    state: present
+    update_cache: yes
+
+- name: Añadir usuario al grupo docker
+  user:
+    name: "{{ ansible_user }}"
+    groups: docker
+    append: yes
+  when: ansible_user is defined
+
+- name: Iniciar y habilitar Docker
+  systemd:
+    name: docker
+    state: started
+    enabled: yes
+    daemon_reload: yes
+
+- name: Crear redes Docker personalizadas
+  community.docker.docker_network:
+    name: "{{ item.name }}"
+    driver: "{{ item.driver | default('bridge') }}"
+    state: present
+  loop: "{{ docker_networks }}"
+  when: docker_networks is defined and docker_networks | length > 0
+
+- name: Desplegar contenedores Docker
+  community.docker.docker_container:
+    name: "{{ item.name }}"
+    image: "{{ item.image }}"
+    state: "{{ item.state | default('started') }}"
+    restart_policy: "{{ item.restart_policy | default('unless-stopped') }}"
+    ports: "{{ item.ports | default([]) }}"
+    volumes: "{{ item.volumes | default([]) }}"
+    env: "{{ item.env | default({}) }}"
+    networks: "{{ item.networks | default([]) }}"
+    labels: "{{ item.labels | default({}) }}"
+  loop: "{{ docker_containers }}"
+  when: docker_containers is defined and docker_containers | length > 0

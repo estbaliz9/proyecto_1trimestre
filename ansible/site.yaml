@@ -8,6 +8,8 @@
   roles:
    - role: nginx
    - role: php
+   - role: docker
+
 - hosts: servidores_bd
   become: true
   roles:

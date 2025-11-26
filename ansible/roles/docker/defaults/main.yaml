@@ -1,0 +1,6 @@
+---
+# Lista de contenedores Docker a desplegar
+docker_containers: []
+
+# Redes Docker personalizadas
+docker_networks: []

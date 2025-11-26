@@ -11,6 +11,12 @@
     state: present
     update_cache: yes
 
+- name: Desactivar sitio por defecto de Nginx
+  file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+  notify: restart nginx
+
 - name: Crear DocumentRoot si no existe
   ansible.builtin.file:
     path: "{{ item['datos']['documentroot'] }}"
@@ -20,7 +26,18 @@
     mode: '0755'
   loop: "{{ virtualhosts }}"
 
-- name: Configuración de virtualhost
+- name: Crear index.html para Fortune Cookie
+  copy:
+    content: |
+      {{ lookup('file', 'fortune-cookie.html') }}
+    dest: "{{ item['datos']['documentroot'] }}/index.html"
+    owner: www-data
+    group: www-data
+    mode: '0644'
+  loop: "{{ virtualhosts }}"
+  when: item.name == "fortune"
+
+- name: Configuración de virtualhost (sitios normales)
   template: 
     src: etc/nginx/vhost.j2
     dest: /etc/nginx/sites-available/{{ item["name"] }}.conf
@@ -28,6 +45,18 @@
     group: root
     mode: '0644'
   loop: "{{ virtualhosts }}"
+  when: item.datos.proxy_pass is not defined
+  notify: restart nginx
+
+- name: Configuración de virtualhost (reverse proxy)
+  template: 
+    src: etc/nginx/vhost_proxy.j2
+    dest: /etc/nginx/sites-available/{{ item["name"] }}.conf
+    owner: root
+    group: root
+    mode: '0644'
+  loop: "{{ virtualhosts }}"
+  when: item.datos.proxy_pass is defined
   notify: restart nginx
 
 - name: Activación de los VirtualHost
@@ -85,12 +114,11 @@
     creates: /tmp/wordpress
 
 - name: Copiar archivos de WordPress al DocumentRoot
-  synchronize:
-    src: /tmp/wordpress/
-    dest: "{{ item['datos']['documentroot'] }}/"
-  delegate_to: "{{ inventory_hostname }}"
+  command: cp -r /tmp/wordpress/. {{ item['datos']['documentroot'] }}/
   loop: "{{ virtualhosts }}"
   when: item.name == "wordpress"
+  args:
+    creates: "{{ item['datos']['documentroot'] }}/index.php"
 
 - name: Establecer permisos correctos en WordPress
   file:
