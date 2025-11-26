@@ -16,20 +16,6 @@
     state: present
     update_cache: yes
 
-- name: Iniciar y habilitar PHP 8.4-FPM
-  systemd:
-    name: php8.4-fpm
-    state: started
-    enabled: yes
-    daemon_reload: yes
-
-- name: Crear enlace simbólico para socket PHP-FPM
-  file:
-    src: /run/php/php8.4-fpm.sock
-    dest: /run/php/php-fpm.sock
-    state: link
-    force: yes
-
 - name: Configurar PHP.ini (FPM)
   lineinfile:
     path: /etc/php/8.4/fpm/php.ini
@@ -42,4 +28,32 @@
     - { regexp: '^;?memory_limit', line: 'memory_limit = 256M' }
     - { regexp: '^;?max_execution_time', line: 'max_execution_time = 300' }
     - { regexp: '^;?date.timezone', line: 'date.timezone = Europe/Madrid' }
+    - { regexp: '^;?cgi.fix_pathinfo', line: 'cgi.fix_pathinfo = 0' }
   notify: restart php-fpm
+
+- name: Configurar PHP-FPM pool (www.conf)
+  lineinfile:
+    path: /etc/php/8.4/fpm/pool.d/www.conf
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    backup: yes
+  loop:
+    - { regexp: '^listen =', line: 'listen = /run/php/php8.4-fpm.sock' }
+    - { regexp: '^;?listen.owner', line: 'listen.owner = www-data' }
+    - { regexp: '^;?listen.group', line: 'listen.group = www-data' }
+    - { regexp: '^;?listen.mode', line: 'listen.mode = 0660' }
+  notify: restart php-fpm
+
+- name: Iniciar y habilitar PHP 8.4-FPM
+  systemd:
+    name: php8.4-fpm
+    state: started
+    enabled: yes
+    daemon_reload: yes
+
+- name: Crear enlace simbólico para socket PHP-FPM (opcional)
+  file:
+    src: /run/php/php8.4-fpm.sock
+    dest: /run/php/php-fpm.sock
+    state: link
+    force: yes
